@@ -1,5 +1,10 @@
-// TODO: typescriptify
-export function configure(opts) {
+interface Options {
+  ignoreExitCode?: boolean; 
+  encoding?: string; 
+  trim?: boolean; 
+}
+
+export function configure(opts: Options) {
     const {
         ignoreExitCode = false, // throws on exit code != 0
         encoding = 'utf-8',     // null for Uint8Array or TextDecoder encoding
@@ -12,7 +17,7 @@ export function configure(opts) {
         throw new Error('Must specify an encoding if trim is enabled')
     }
 
-    return async function shell(strings, ...keys) {
+    return async function shell(strings: TemplateStringsArray, ...keys: string[]) {
         let command = strings[0]
         for (let i = 1; i < strings.length; i++) {
             command += keys[i - 1].toString()
@@ -30,7 +35,7 @@ export function configure(opts) {
         let { code } = await proc.status()
 
         if (code != 0 && !ignoreExitCode) {
-            let stderr = await Deno.readAll(proc.stderr)
+            let stderr = await proc.stderrOutput()
             let decoder = new TextDecoder('utf-8')
             let error = decoder.decode(stderr).trim()
             throw new Error(`Non-zero exit code: ${code} ${error}`)
