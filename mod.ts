@@ -50,6 +50,8 @@ export function configure(opts: Options) {
 
     let text = decoder.decode(stdout);
     if (trim) text = text.trim();
+    await proc.stderr.close(); // fix "Too many open files error"
+    await proc.close(); // fix "Too many open files error"
     return text;
   };
 }
