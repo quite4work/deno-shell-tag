@@ -7,19 +7,21 @@ interface Options {
 export function configure(opts: Options) {
   const {
     ignoreExitCode = false, // throws on exit code != 0
-    encoding = "utf-8", // null for Uint8Array or TextDecoder encoding
+    encoding = "utf-8", // null for Uint8Array or TextDecoder and TextDecoder encoding
     trim = true, // trim string output. invalid for encoding null
   } = opts;
 
+  const encoder = new TextEncoder(encoding);
   const decoder = new TextDecoder(encoding);
 
   if (encoding == null && trim) {
     throw new Error("Must specify an encoding if trim is enabled");
   }
 
-  return async function shell(
+  async function shImpl(
+    args: string[],
     strings: TemplateStringsArray,
-    ...keys: string[]
+    keys: string[]
   ) {
     let command = strings[0];
     for (let i = 1; i < strings.length; i++) {
@@ -34,6 +36,11 @@ export function configure(opts: Options) {
       stderr: "piped",
     });
 
+    if (args.length > 0) {
+      await proc.stdin.write(encoder.encode(args[0]));
+    }
+
+    await proc.stdin.close();
     let stdout = await proc.output();
     let { code } = await proc.status();
 
@@ -53,6 +60,17 @@ export function configure(opts: Options) {
     await proc.stderr.close(); // fix "Too many open files error"
     await proc.close(); // fix "Too many open files error"
     return text;
+  }
+
+  return function sh(...args) {
+    if (Array.isArray(args[0])) {
+      const [strings, ...keys] = args;
+      return shImpl([], strings, keys);
+    } else {
+      return function (strings, ...keys) {
+        return shImpl(args, strings, keys);
+      };
+    }
   };
 }
 
