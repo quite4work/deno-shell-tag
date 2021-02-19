@@ -7,11 +7,11 @@ interface Options {
 export function configure(opts: Options) {
   const {
     ignoreExitCode = false, // throws on exit code != 0
-    encoding = "utf-8", // null for Uint8Array or TextDecoder and TextDecoder encoding
+    encoding = "utf-8", // null for Uint8Array or TextDecoder encoding
     trim = true, // trim string output. invalid for encoding null
   } = opts;
 
-  const encoder = new TextEncoder(encoding);
+  const encoder = new TextEncoder();
   const decoder = new TextDecoder(encoding);
 
   if (encoding == null && trim) {
@@ -62,12 +62,12 @@ export function configure(opts: Options) {
     return text;
   }
 
-  return function sh(...args) {
+  return function sh(...args: any) {
     if (Array.isArray(args[0])) {
       const [strings, ...keys] = args;
       return shImpl([], strings, keys);
     } else {
-      return function (strings, ...keys) {
+      return function (strings: TemplateStringsArray, ...keys: string[]) {
         return shImpl(args, strings, keys);
       };
     }
