@@ -1,0 +1,12 @@
+#!/usr/bin/env deno run --allow-run
+
+// import sh from "https://denopkg.com/quite4work/deno-shell-tag";
+import sh from "../../sh.ts";
+
+let date = await sh`date`;
+
+let stdin = `test_testtt ${date}`;
+
+let res = await sh(stdin)`sed s/testtt/ok/`;
+
+console.log(res);
